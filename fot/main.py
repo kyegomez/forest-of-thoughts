@@ -9,6 +9,22 @@ from fot.agent_name_creator import create_agent_name
 # Load the environment variables
 load_dotenv()
 
+
+def agent_metadata(agent: Agent, task: str):
+    """
+    Returns the metadata for the agent.
+    
+    Returns:
+        dict: The metadata for the agent.
+    """
+    return {
+        "Agent Name": f"{agent.ai_name}",
+        "Agent ID": agent.id,
+        "Agent History": agent.short_memory,
+        "task": task,
+    }
+
+
 class ForestAgent:
     """
     Represents a forest of agents that can perform tasks.
