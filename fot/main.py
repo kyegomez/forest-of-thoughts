@@ -1,9 +1,9 @@
-import os
 
 from dotenv import load_dotenv
 
 # Import the OpenAIChat model and the Agent struct
 from swarms import Agent, Mixtral
+
 from fot.agent_name_creator import create_agent_name
 
 # Load the environment variables
@@ -28,7 +28,10 @@ class ForestAgent:
         self.num_agents = num_agents
         self.max_loops = max_loops
         self.max_new_tokens = max_new_tokens
-        self.forest = 
+        self.forest = []
+        
+        for i in range(num_agents):
+            self.forest.append(self.create_agent())
         
     def create_agent(self):
         """
@@ -58,7 +61,11 @@ class ForestAgent:
         Returns:
             list[Agent]: The list of created agents.
         """
-        return [self.create_agent() for _ in range(self.num_agents)]
+        agents =  [self.create_agent() for _ in range(self.num_agents)]
+        
+        # Add the agents to the forest
+        self.forest.extend(agents)
+        
     
     def run(self, task: str, *args, **kwargs):
         """
