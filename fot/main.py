@@ -23,6 +23,7 @@ def agent_metadata(agent: Agent, task: str):
         "Agent History": agent.short_memory,
         "task": task,
     }
+    return str
 
 
 class ForestAgent:
