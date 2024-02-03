@@ -2,7 +2,7 @@
 from dotenv import load_dotenv
 
 # Import the OpenAIChat model and the Agent struct
-from swarms import Agent, Mixtral
+from swarms import Agent, Mixtral, ParallelWorkflow
 
 from fot.agent_name_creator import create_agent_name
 
@@ -23,7 +23,7 @@ def agent_metadata(agent: Agent, task: str):
         "Agent History": agent.short_memory,
         "task": task,
     }
-    return str
+    return str(out)
 
 
 class ForestAgent:
@@ -93,7 +93,16 @@ class ForestAgent:
             *args: Additional positional arguments for the task.
             **kwargs: Additional keyword arguments for the task.
         """
-        agents = self.create_agents()
-        for agent in agents:
-            agent.start()
-            agent.run()
+        
+            
+    def distribute_task_to_agents(self, task: str, *args, **kwargs):
+        """
+        Distributes the specified task to all agents in the forest.
+        
+        Args:
+            task (str): The task to be performed.
+            *args: Additional positional arguments for the task.
+            **kwargs: Additional keyword arguments for the task.
+        """
+        for agent in self.forest:
+            agent.run(task, *args, **kwargs)
