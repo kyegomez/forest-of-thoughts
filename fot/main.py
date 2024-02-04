@@ -1,6 +1,6 @@
 import uuid
 
-import chroma
+import chromadb
 from dotenv import load_dotenv
 
 # Import the OpenAIChat model and the Agent struct
@@ -58,7 +58,7 @@ class ForestAgent:
         self.forest = []
 
         # Connect
-        self.db = chroma.Client()
+        self.db = chromadb.Client()
 
         # Create a collection
         self.collection = self.db.create_collection(name="forest-of-thoughts")
@@ -118,7 +118,7 @@ class ForestAgent:
         """
         for agent in self.forest:
             out = agent.run(task, *args, **kwargs)
-            save_metadata = self.get_agent_metadata(agent, task)
+            save_metadata = self.get_agent_metadata(agent, task, out)
             self.add_document(save_metadata)
 
     def convert_doc_files_to_text(self):
