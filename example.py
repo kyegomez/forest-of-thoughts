@@ -1,5 +1,5 @@
 import os
-from swarms import OpenAIChat
+from swarms import Mixtral
 from fot.main import ForestOfAgents
 from dotenv import load_dotenv
 
@@ -8,7 +8,7 @@ load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 
 # create llm
-llm = OpenAIChat(openai_api_key=api_key)
+llm = Mixtral(max_new_tokens=3000, )
 
 # Create a forest of agents
 forest = ForestOfAgents(llm, num_agents=5, max_loops=100, max_new_tokens=100)
