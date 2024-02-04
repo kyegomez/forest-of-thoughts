@@ -117,11 +117,15 @@ class ForestAgent:
             *args: Additional positional arguments for the task.
             **kwargs: Additional keyword arguments for the task.
         """
+        
+        outputs = []
         for agent in self.forest:
             out = agent.run(task, *args, **kwargs)
             save_metadata = self.get_agent_metadata(agent, task, out)
             self.add_document(save_metadata)
-        return out
+            
+            outputs.append(out)
+        return outputs
 
     def convert_doc_files_to_text(self):
         # Get all files in the folder using os
