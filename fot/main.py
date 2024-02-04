@@ -66,7 +66,7 @@ class ForestAgent:
         # Convert all files in folders to text
         for i in range(num_agents):
             self.forest.append(self.create_agent())
-        
+
         if docs:
             self.convert_doc_files_to_text()
 
