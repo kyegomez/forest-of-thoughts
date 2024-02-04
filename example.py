@@ -19,4 +19,7 @@ forest = ForestOfAgents(
 )
 
 # Distribute tasks to the agents
-forest.run("Solve the PNP prblem and give a detailed explanation of the solution.")
+forest.run(
+    "Solve the PNP prblem and give a detailed explanation of the"
+    " solution."
+)

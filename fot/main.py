@@ -91,7 +91,7 @@ class ForestOfAgents:
             for i in range(0, len(self.forest), 2)
         ]
         colored(f"Number of duos: {len(self.duos)}", "green")
-        
+
         # Create the summarizer agent
         self.summarizer = self.summarizer_agent()
 
@@ -133,7 +133,6 @@ class ForestOfAgents:
 
         # Then engage in duos
         out = self.seperate_agents_into_conversations(task)
-        
 
         # Print out the output of the conversation
         for i in range(len(out)):
@@ -270,16 +269,17 @@ class ForestOfAgents:
             *args,
             **kwargs,
         )
-        
+
         # Add summarizer to the forest
         self.forest.append(self.summarizer)
         colored(f"Summarizer {summarizer} added to forest", "green")
-        
+
         # Add summarizer metadata to database
-        save_metadata = self.get_agent_metadata(self.summarizer, "Summarizer", "")
-        
+        save_metadata = self.get_agent_metadata(
+            self.summarizer, "Summarizer", ""
+        )
+
         # Save to database
         self.add_document(save_metadata)
-        
+
         return self.summarizer
-    
