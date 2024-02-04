@@ -1,6 +1,6 @@
 import uuid
-
 import chromadb
+import os
 from dotenv import load_dotenv
 
 # Import the OpenAIChat model and the Agent struct
@@ -155,3 +155,21 @@ class ForestOfAgents:
             dict: The metadata for the agent.
         """
         return agent_metadata(agent, task, output)
+
+    def traverse_directory(self, directory_name: str):
+        """
+        Traverse through every file in the given directory and its subdirectories,
+        and return the paths of all files.
+
+        Parameters:
+        - directory_name (str): The name of the directory to traverse.
+
+        Returns:
+        - list: A list of paths to each file in the directory and its subdirectories.
+        """
+        output_array = []
+        for root, dirs, files in os.walk(directory_name):
+            for file in files:
+                file_path = os.path.join(root, file)
+                output_array.append(file_path)
+        return output_array
