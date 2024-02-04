@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask App</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        #loadingMessage {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>ChatGPT but slower and more expensive</h1>
+    <form id="inputForm">
+        <input type="text" name="inputText" id="inputText" placeholder="Ask any question...">
+        <button type="submit">Submit</button>
+    </form>
+    <div id="outputBox"></div>
+    <div id="loadingMessage">Loading...</div>
+
+    <script>
+        $(document).ready(function(){
+            $('#inputForm').submit(function(event){
+                event.preventDefault();
+                $('#loadingMessage').show();
+                $.ajax({
+                    url: '/process',
+                    method: 'POST',
+                    data: {
+                        inputText: $('#inputText').val()
+                    },
+                    success: function(response){
+                        $('#outputBox').html(response.outputText);
+                        $('#loadingMessage').hide();
+                    },
+                    error: function(){
+                        $('#outputBox').html('Error occurred');
+                        $('#loadingMessage').hide();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
