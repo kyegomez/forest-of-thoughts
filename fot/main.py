@@ -30,7 +30,7 @@ def agent_metadata(agent: Agent, task: str, output: str):
     return str(out)
 
 
-class ForestAgent:
+class ForestOfAgents:
     """
     Represents a forest of agents that can perform tasks.
 
