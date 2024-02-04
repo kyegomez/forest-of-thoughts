@@ -106,6 +106,7 @@ class ForestAgent:
             *args: Additional positional arguments for the task.
             **kwargs: Additional keyword arguments for the task.
         """
+        pass
 
     def distribute_task_to_agents(self, task: str, *args, **kwargs):
         """
