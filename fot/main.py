@@ -53,6 +53,7 @@ class ForestOfAgents:
         max_new_tokens: int,
         docs: str = None,
         n_results: str = 2,
+        summarizer_prompt: str = None,
         *args,
         **kwargs,
     ):
@@ -63,6 +64,7 @@ class ForestOfAgents:
         self.max_new_tokens = max_new_tokens
         self.docs = docs
         self.n_results = n_results
+        self.summarizer_prompt = summarizer_prompt
 
         # A list of agents in the forest
         self.forest = []
@@ -263,7 +265,8 @@ class ForestOfAgents:
             system_prompt=(
                 "You're an tree in a forest of thoughts. Work with"
                 " your peers to solve problems. You will summarize"
-                f" the conversations. Your name is {summarizer}"
+                f" the conversations. Your name is {summarizer} and"
+                f" your strategy is {self.summarizer_prompt}"
             ),
             autosave=True,
             *args,
