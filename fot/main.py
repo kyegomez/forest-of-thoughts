@@ -1,3 +1,4 @@
+from typing import List
 import uuid
 
 import chromadb
@@ -43,6 +44,7 @@ class ForestOfAgents:
     def __init__(
         self,
         llm,
+        summarizer_lmm,
         num_agents: int,
         max_loops: int,
         max_new_tokens: int,
@@ -66,6 +68,14 @@ class ForestOfAgents:
         # Convert all files in folders to text
         for i in range(num_agents):
             self.forest.append(self.create_agent())
+            
+        self.summarizer = Agent(
+            llm=summarizer_lmm,
+            max_loops=self.max_loops,
+            name=f"Summarizer - {create_agent_name()}",
+            autosave=True,
+        )
+        
 
         if docs:
             self.convert_doc_files_to_text()
@@ -106,7 +116,8 @@ class ForestOfAgents:
             *args: Additional positional arguments for the task.
             **kwargs: Additional keyword arguments for the task.
         """
-        pass
+        outputs = self.distribute_task_to_agents(task, *args, **kwargs)
+        return self.summarize_outputs(task, outputs, *args, **kwargs)
 
     def distribute_task_to_agents(self, task: str, *args, **kwargs):
         """
@@ -126,6 +137,28 @@ class ForestOfAgents:
             
             outputs.append(out)
         return outputs
+    
+    def summarize_outputs(self, question: str, outputs: List[str], *args, **kwargs):
+        """
+        Summarizes the outputs from the agents.
+
+        Args:
+            outputs (list): The list of outputs from the agents.
+
+        Returns:
+            str: The summarized output.
+        """
+        
+        task = self.format_answers(outputs)
+        self.summarizer.set_system_prompt(f"""
+        Answer the following question:
+        {question}   
+        
+        By extracting the relevant information from the following thoughts:
+        Be concise and opinionated. Answer in exactly one sentence.               
+        """
+        )
+        return self.summarizer.run(task, *args, **kwargs)
 
     def convert_doc_files_to_text(self):
         # Get all files in the folder using os
@@ -155,3 +188,18 @@ class ForestOfAgents:
             dict: The metadata for the agent.
         """
         return agent_metadata(agent, task, output)
+    
+    def format_answers(self, answers: List[str]):
+        """
+        Formats the answers for the user.
+
+        Args:
+            answers (list): The list of answers from the agents.
+
+        Returns:
+            str: The formatted answers.
+        """
+        out = ""
+        for i, answer in enumerate(answers):
+            out += f"Thought {i + 1}: {answer}\n"
+        return out
