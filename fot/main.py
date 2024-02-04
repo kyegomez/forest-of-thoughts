@@ -4,7 +4,7 @@ import chromadb
 from dotenv import load_dotenv
 
 # Import the OpenAIChat model and the Agent struct
-from swarms import Agent
+from swarms import Agent, data_to_text
 
 from fot.agent_name_creator import create_agent_name
 
@@ -120,6 +120,7 @@ class ForestAgent:
             out = agent.run(task, *args, **kwargs)
             save_metadata = self.get_agent_metadata(agent, task, out)
             self.add_document(save_metadata)
+        return out
 
     def convert_doc_files_to_text(self):
         # Get all files in the folder using os
