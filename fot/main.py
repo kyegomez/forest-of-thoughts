@@ -72,7 +72,7 @@ class ForestOfAgents:
         # Docs
         if docs:
             self.traverse_directory()
-            
+
     def create_agent(self):
         """
         Creates a new agent with the specified parameters.
@@ -83,7 +83,7 @@ class ForestOfAgents:
         return Agent(
             llm=self.llm,
             max_loops=self.max_loops,
-            name=create_agent_name(),
+            agent_name=str(create_agent_name()),
             system_prompt=None,
             autosave=True,
         )
@@ -120,13 +120,13 @@ class ForestOfAgents:
             *args: Additional positional arguments for the task.
             **kwargs: Additional keyword arguments for the task.
         """
-        
+
         outputs = []
         for agent in self.forest:
             out = agent.run(task, *args, **kwargs)
             save_metadata = self.get_agent_metadata(agent, task, out)
             self.add_document(save_metadata)
-            
+
             outputs.append(out)
         return outputs
 
@@ -158,7 +158,7 @@ class ForestOfAgents:
             dict: The metadata for the agent.
         """
         return agent_metadata(agent, task, output)
-    
+
     def traverse_directory(self):
         """
         Traverse through every file in the given directory and its subdirectories,
@@ -173,4 +173,3 @@ class ForestOfAgents:
                 data = data_to_text(file)
                 added_to_db = self.add_document(data)
         return added_to_db
-            

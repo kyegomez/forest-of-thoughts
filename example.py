@@ -11,10 +11,7 @@ api_key = os.getenv("OPENAI_API_KEY")
 llm = OpenAIChat(openai_api_key=api_key)
 
 # Create a forest of agents
-forest = ForestOfAgents(
-    llm, num_agents=5, max_loops=100, max_new_tokens=100)
+forest = ForestOfAgents(llm, num_agents=5, max_loops=100, max_new_tokens=100)
 
 # Distribute tasks to the agents
-forest.distribute_tasks(
-    "What is the meaning of life?"
-)
+forest.distribute_tasks("What is the meaning of life?")
