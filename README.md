@@ -46,7 +46,7 @@ forest = ForestOfAgents(
 )
 
 # Distribute tasks to the agents
-forest.run("What is the meaning of life?")
+forest.run("Solve the PNP prblem and give a detailed explanation of the solution.")
 
 
 ```
