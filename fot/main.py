@@ -1,3 +1,4 @@
+import os
 import uuid
 
 import chromadb
@@ -46,13 +47,14 @@ class ForestOfAgents:
         num_agents: int,
         max_loops: int,
         max_new_tokens: int,
-        docs: str = "/knowledge",
+        docs: str = None,
     ):
         super().__init__()
         self.llm = llm
         self.num_agents = num_agents
         self.max_loops = max_loops
         self.max_new_tokens = max_new_tokens
+        self.docs = docs
 
         # A list of agents in the forest
         self.forest = []
@@ -67,9 +69,10 @@ class ForestOfAgents:
         for i in range(num_agents):
             self.forest.append(self.create_agent())
 
+        # Docs
         if docs:
-            self.convert_doc_files_to_text()
-
+            self.traverse_directory()
+            
     def create_agent(self):
         """
         Creates a new agent with the specified parameters.
@@ -155,3 +158,19 @@ class ForestOfAgents:
             dict: The metadata for the agent.
         """
         return agent_metadata(agent, task, output)
+    
+    def traverse_directory(self):
+        """
+        Traverse through every file in the given directory and its subdirectories,
+        and return the paths of all files.
+        Parameters:
+        - directory_name (str): The name of the directory to traverse.
+        Returns:
+        - list: A list of paths to each file in the directory and its subdirectories.
+        """
+        for root, dirs, files in os.walk(self.docs):
+            for file in files:
+                data = data_to_text(file)
+                added_to_db = self.add_document(data)
+        return added_to_db
+            
