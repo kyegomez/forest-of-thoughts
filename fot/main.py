@@ -6,8 +6,12 @@ from dotenv import load_dotenv
 
 # Import the OpenAIChat model and the Agent struct
 from swarms import Agent, data_to_text
+from termcolor import colored
 
-from fot.agent_name_creator import create_agent_name
+
+def create_agent_name():
+    return f"tree_{uuid.uuid4()}"
+
 
 # Load the environment variables
 load_dotenv()
@@ -67,6 +71,7 @@ class ForestOfAgents:
         self.db = chromadb.Client()
 
         # Create a collection
+        colored("Creating collection", "green")
         self.collection = self.db.create_collection(
             name="forest-of-thoughts"
         )
@@ -74,6 +79,7 @@ class ForestOfAgents:
         # Convert all files in folders to text
         for i in range(num_agents):
             self.forest.append(self.create_agent())
+            colored(f"Agent {i} created", "green")
 
         # Docs
         if docs:
@@ -84,6 +90,10 @@ class ForestOfAgents:
             self.forest[i : i + 2]
             for i in range(0, len(self.forest), 2)
         ]
+        colored(f"Number of duos: {len(self.duos)}", "green")
+        
+        # Create the summarizer agent
+        self.summarizer = self.summarizer_agent()
 
     def create_agent(self, *args, **kwargs):
         """
@@ -92,27 +102,19 @@ class ForestOfAgents:
         Returns:
             Agent: The created agent.
         """
+        name = (str(create_agent_name()),)
         return Agent(
             llm=self.llm,
             max_loops=self.max_loops,
-            agent_name=str(create_agent_name()),
-            system_prompt=None,
+            agent_name=name,
+            system_prompt=(
+                "You're an tree in a forest of thoughts. Work with"
+                f" your peers to solve problems. Your name is {name}"
+            ),
             autosave=True,
             *args,
             **kwargs,
         )
-
-    def create_agents(self):
-        """
-        Creates a list of agents based on the specified number of agents.
-
-        Returns:
-            list[Agent]: The list of created agents.
-        """
-        agents = [self.create_agent() for _ in range(self.num_agents)]
-
-        # Add the agents to the forest
-        self.forest.extend(agents)
 
     def run(self, task: str, *args, **kwargs):
         """
@@ -123,18 +125,24 @@ class ForestOfAgents:
             *args: Additional positional arguments for the task.
             **kwargs: Additional keyword arguments for the task.
         """
+        colored(
+            f"Distributing tasks: {task} to all {self.num_agents}",
+            "green",
+        )
         self.distribute_task_to_agents(task, *args, **kwargs)
 
         # Then engage in duos
-        out = self.seperate_agents_into_conversations()
+        out = self.seperate_agents_into_conversations(task)
+        
 
-        # Add up all the outputs from the duos into a single string for every duo
-        # Save the output to the database
-        for i in out:
-            save_metadata = self.get_agent_metadata(
-                self.forest[i], task, out
-            )
-            self.add_document(save_metadata)
+        # Print out the output of the conversation
+        for i in range(len(out)):
+            colored(f"Conversation {i} output: {out[i]}", "cyan")
+
+        # Summarize the conversation and save to database
+        # summary = self.summarizer.run(f"Summarize: {task}", out)
+
+        return out
 
     def distribute_task_to_agents(self, task: str, *args, **kwargs):
         """
@@ -148,17 +156,16 @@ class ForestOfAgents:
 
         outputs = []
         for agent in self.forest:
-            out = agent.run(task, *args, **kwargs)
+            out = agent.run(
+                f"{task}: History{self.context_history(task)}",
+                *args,
+                **kwargs,
+            )
             save_metadata = self.get_agent_metadata(agent, task, out)
             self.add_document(save_metadata)
 
             outputs.append(out)
         return outputs
-
-    def convert_doc_files_to_text(self):
-        # Get all files in the folder using os
-        # Convert all files to text
-        pass
 
     def add_document(self, document: str):
         doc_id = str(uuid.uuid4())
@@ -204,15 +211,16 @@ class ForestOfAgents:
                 print("Document added to Database ")
         return added_to_db
 
-    def seperate_agents_into_conversations(self, task: str) -> str:
+    def seperate_agents_into_conversations(self, task: str) -> list:
         # Take the duos and engage them in conversation using their .run method that intakes a task param with string
         # return the output of the conversation
-
+        all_outputs = []
         # The conversation prompt that shows the main task of the conversation and the agents involved
         for duo in self.duos:
             conversation_prompt = (
                 f"Conversation between {duo[0].agent_name} and"
-                f" {duo[1].agent_name} about {task}"
+                f" {duo[1].agent_name} about {task}:"
+                f" {self.context_history(task)}"
             )
             output = duo[0].run(conversation_prompt)
             save_metadata = self.get_agent_metadata(
@@ -223,6 +231,8 @@ class ForestOfAgents:
                 f"Conversation between {duo[0].agent_name} and"
                 f" {duo[1].agent_name} saved to database"
             )
+            all_outputs.append(output)
+        return all_outputs
 
     def context_history(self, query: str):
         """
@@ -238,9 +248,38 @@ class ForestOfAgents:
         ltr = self.query_documents(query, self.n_results)
 
         context = f"""
-            {query}
-            ####### Thoughts from all agents ################
+            ####### Forest Database ################
             {ltr}
         """
 
         return context
+
+    def summarizer_agent(self, *args, **kwargs):
+        # Summarizer agent
+        summarizer = "Summarizer Tree"
+        self.summarizer = Agent(
+            llm=self.llm,
+            max_loops=self.max_loops,
+            agent_name=summarizer,
+            system_prompt=(
+                "You're an tree in a forest of thoughts. Work with"
+                " your peers to solve problems. You will summarize"
+                f" the conversations. Your name is {summarizer}"
+            ),
+            autosave=True,
+            *args,
+            **kwargs,
+        )
+        
+        # Add summarizer to the forest
+        self.forest.append(self.summarizer)
+        colored(f"Summarizer {summarizer} added to forest", "green")
+        
+        # Add summarizer metadata to database
+        save_metadata = self.get_agent_metadata(self.summarizer, "Summarizer", "")
+        
+        # Save to database
+        self.add_document(save_metadata)
+        
+        return self.summarizer
+    
