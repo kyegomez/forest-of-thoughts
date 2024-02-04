@@ -1,9 +1,10 @@
 import uuid
+
 import chroma
 from dotenv import load_dotenv
 
 # Import the OpenAIChat model and the Agent struct
-from swarms import Agent, Mixtral
+from swarms import Agent
 
 from fot.agent_name_creator import create_agent_name
 
@@ -22,6 +23,7 @@ def agent_metadata(agent: Agent, task: str):
         "Agent Name": f"{agent.ai_name}",
         "Agent ID": agent.id,
         "Agent History": agent.short_memory,
+        "Agent System Prompt": agent.system_prompt,
         "task": task,
     }
     return str(out)
@@ -46,6 +48,7 @@ class ForestAgent:
         docs: str = "/knowledge",
     ):
         super().__init__()
+        self.llm = llm
         self.num_agents = num_agents
         self.max_loops = max_loops
         self.max_new_tokens = max_new_tokens
@@ -130,3 +133,5 @@ class ForestAgent:
         docs = self.collection.query(query_texts=[query], n_results=n_docs)["documents"]
 
         return docs[0]
+
+    
