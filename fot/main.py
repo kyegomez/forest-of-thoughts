@@ -48,6 +48,9 @@ class ForestOfAgents:
         max_loops: int,
         max_new_tokens: int,
         docs: str = None,
+        n_results: str = 2,
+        *args,
+        **kwargs,
     ):
         super().__init__()
         self.llm = llm
@@ -55,6 +58,7 @@ class ForestOfAgents:
         self.max_loops = max_loops
         self.max_new_tokens = max_new_tokens
         self.docs = docs
+        self.n_results = n_results
 
         # A list of agents in the forest
         self.forest = []
@@ -63,7 +67,9 @@ class ForestOfAgents:
         self.db = chromadb.Client()
 
         # Create a collection
-        self.collection = self.db.create_collection(name="forest-of-thoughts")
+        self.collection = self.db.create_collection(
+            name="forest-of-thoughts"
+        )
 
         # Convert all files in folders to text
         for i in range(num_agents):
@@ -73,7 +79,13 @@ class ForestOfAgents:
         if docs:
             self.traverse_directory()
 
-    def create_agent(self):
+        # Seperate the total number of agents into duos for conversations
+        self.duos = [
+            self.forest[i : i + 2]
+            for i in range(0, len(self.forest), 2)
+        ]
+
+    def create_agent(self, *args, **kwargs):
         """
         Creates a new agent with the specified parameters.
 
@@ -86,6 +98,8 @@ class ForestOfAgents:
             agent_name=str(create_agent_name()),
             system_prompt=None,
             autosave=True,
+            *args,
+            **kwargs,
         )
 
     def create_agents(self):
@@ -109,7 +123,18 @@ class ForestOfAgents:
             *args: Additional positional arguments for the task.
             **kwargs: Additional keyword arguments for the task.
         """
-        pass
+        self.distribute_task_to_agents(task, *args, **kwargs)
+
+        # Then engage in duos
+        out = self.seperate_agents_into_conversations()
+
+        # Add up all the outputs from the duos into a single string for every duo
+        # Save the output to the database
+        for i in out:
+            save_metadata = self.get_agent_metadata(
+                self.forest[i], task, out
+            )
+            self.add_document(save_metadata)
 
     def distribute_task_to_agents(self, task: str, *args, **kwargs):
         """
@@ -142,11 +167,15 @@ class ForestOfAgents:
         return doc_id
 
     def query_documents(self, query: str, n_docs: int = 1):
-        docs = self.collection.query(query_texts=[query], n_results=n_docs)["documents"]
+        docs = self.collection.query(
+            query_texts=[query], n_results=n_docs
+        )["documents"]
 
         return docs[0]
 
-    def get_agent_metadata(self, agent: Agent, task: str, output: str):
+    def get_agent_metadata(
+        self, agent: Agent, task: str, output: str
+    ):
         """
         Returns the metadata for the specified agent.
 
@@ -172,4 +201,46 @@ class ForestOfAgents:
             for file in files:
                 data = data_to_text(file)
                 added_to_db = self.add_document(data)
+                print("Document added to Database ")
         return added_to_db
+
+    def seperate_agents_into_conversations(self, task: str) -> str:
+        # Take the duos and engage them in conversation using their .run method that intakes a task param with string
+        # return the output of the conversation
+
+        # The conversation prompt that shows the main task of the conversation and the agents involved
+        for duo in self.duos:
+            conversation_prompt = (
+                f"Conversation between {duo[0].agent_name} and"
+                f" {duo[1].agent_name} about {task}"
+            )
+            output = duo[0].run(conversation_prompt)
+            save_metadata = self.get_agent_metadata(
+                duo[0], duo[1].short_memory, output
+            )
+            self.add_document(save_metadata)
+            print(
+                f"Conversation between {duo[0].agent_name} and"
+                f" {duo[1].agent_name} saved to database"
+            )
+
+    def context_history(self, query: str):
+        """
+        Generate the agent long term memory prompt
+
+        Args:
+            system_prompt (str): The system prompt
+            history (List[str]): The history of the conversation
+
+        Returns:
+            str: The agent history prompt
+        """
+        ltr = self.query_documents(query, self.n_results)
+
+        context = f"""
+            {query}
+            ####### Thoughts from all agents ################
+            {ltr}
+        """
+
+        return context
