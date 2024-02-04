@@ -20,7 +20,7 @@ def agent_metadata(agent: Agent, task: str, output: str):
         dict: The metadata for the agent.
     """
     out = {
-        "Agent Name": f"{agent.ai_name}",
+        "Agent Name": f"{agent.agent_name}",
         "Agent ID": agent.id,
         "Agent History": agent.short_memory,
         "Agent System Prompt": agent.system_prompt,
