@@ -39,6 +39,7 @@ class ForestAgent:
 
     def __init__(
         self,
+        llm,
         num_agents: int,
         max_loops: int,
         max_new_tokens: int,
@@ -73,11 +74,7 @@ class ForestAgent:
             Agent: The created agent.
         """
         return Agent(
-            llm=Mixtral(
-                max_new_tokens=self.max_new_tokens,
-                load_in_4bit=True,
-                use_flash_attention_2=True,
-            ),
+            llm=self.llm,
             max_loops=self.max_loops,
             name=create_agent_name(),
             system_prompt=None,
