@@ -38,9 +38,15 @@ def initalize_forest(num_agents:int = 5, max_loops:int = 1, max_new_tokens:int =
         model_name="gpt-4-turbo-preview"
     )
     
+    query_creator_llm = OpenAIChat(
+        openai_api_key=api_key,
+        model_name="gpt-3.5-turbo"
+    )
+    
     forest = ForestOfAgents(
         llm, 
         summarizer_llm,
+        query_creator_llm,
         num_agents=num_agents,
         max_loops=max_loops,
         max_new_tokens=max_new_tokens
@@ -50,14 +56,6 @@ def initalize_forest(num_agents:int = 5, max_loops:int = 1, max_new_tokens:int =
 
 if __name__ == '__main__':
     forest = initalize_forest()
-    app.run(debug=True)
-
-
-QUESTION = "What is the hardest problem ever?"
-# Distribute tasks to the agents
-answer = forest.run(QUESTION)
-
-print(
-    f"\nQuestion: {QUESTION}\n"
-    f"Answer: {answer}"
-)
+    app.run(debug=True,
+            port=5001
+            )
